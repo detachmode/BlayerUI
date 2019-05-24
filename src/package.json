@@ -1,0 +1,7 @@
+{
+    "scripts": {
+        "dev" : "dotnet run --project BlayerUI.Server",
+        "build" : "sh ../build.sh",
+        "clean" : "sh ../build.sh clean"
+    }
+  }
