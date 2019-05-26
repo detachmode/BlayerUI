@@ -1,5 +1,6 @@
 ﻿using BlayerUI.Shared;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,54 +10,81 @@ using System.Threading.Tasks;
 namespace BlayerUI.Server.Controllers
 {
 
+    public class ViewModel
+    {
+        public string SomeText { get; set; } = "hi";
+        public bool ShowTime { get; set; }
+    }
 
 
     [Route("api/[controller]")]
     public class SampleDataController : Controller
     {
-        private static string[] Summaries = new[]
+        private readonly ViewModel _viewModel;
+
+        public SampleDataController(ViewModel state)
         {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+            // var res  = System.IO.File.ReadAllText("./viewjson.json");
+            this._viewModel = state;
+        }
+
 
         [HttpGet("[action]")]
-        public IEnumerable<WeatherForecast> WeatherForecasts()
+        public string Event(string command)
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            switch (command)
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            });
+                case "ShowTime":
+                    _viewModel.ShowTime = !_viewModel.ShowTime;
+                    break;
+                case "ChangeSomeText":
+                    _viewModel.SomeText = command + Guid.NewGuid();
+                    break;
+
+            }
+
+            return View();
         }
 
         [HttpGet("[action]")]
         public string View()
         {
-            var res = System.IO.File.ReadAllText("./viewjson.json");
-            return res;
+            BElement time = new BBText("");
+            if (_viewModel.ShowTime)
+            {
+                time = new BDiv
+                {
+                    InnerElements = new List<BElement>
+                    {
+                        new BBText(DateTime.Now.ToLongTimeString())
+                    }
+                };
+            }
 
-            var title = DateTime.Now.ToString();
-            // return new JsonView
-            // {
-            //     Elements = new List<BElement>
-            //     {
-            //         // new BBText{InnerText = "HI"},
-            //         // new BBText{InnerText = "HI"},
-            //         // new BBText{InnerText = "HI"},
-            //         // new BBText{InnerText = "HI"},
-            //         new BBText {InnerText = title},
-            //         new BBText {InnerText = title},
-            //         new BBText {InnerText = title},
-            //         new BBText {InnerText = title},
-            //         new BBText {InnerText = title},
-            //         new BButton {InnerText = "click me!"},
-            //         new BButton {InnerText = "click me!"},
-            //         new BButton {InnerText = "click me!"},
-            //         new BButton {InnerText = "click me!"},
-            //     }
-            // };
+            var ui = new JsonView(
+                new BDiv
+                {
+                    InnerElements = new List<BElement>
+                    {
+                        new BBHeader("Test Page"),
+                        new BBText(_viewModel.SomeText),
+                        new BButton
+                        {
+                            InnerText = "Click Me!",
+                            OnClick = "ChangeSomeText"
+                        },
+
+                        new BButton
+                        {
+                            InnerText = "Toogle Show Time",
+                            OnClick = "ShowTime"
+                        },
+                        time
+                    }
+                }
+            );
+
+            return JsonConvert.SerializeObject(ui);
         }
     }
 }

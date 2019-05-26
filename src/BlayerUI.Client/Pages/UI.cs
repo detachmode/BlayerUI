@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Components.RenderTree;
 
 namespace BlayerUI.Client
 {
-    [Route("/classrender")]
-    public class ClassOnlyComponent : ComponentBase
+    [Route("/ui")]
+    public class BUI : ComponentBase
     {
 
         [Inject] public HttpClient client { get; set; }
@@ -28,50 +28,56 @@ namespace BlayerUI.Client
         {
             System.Diagnostics.Debug.WriteLine(counter++);
             var seq = 0;
-        
 
-            builder.OpenElement(seq, "div");
 
-            builder.AddAttribute(++seq,"class", "main");
-            builder.OpenElement(seq, "h3");
+            builder.OpenElement(++seq, "div");
+
+            builder.AddAttribute(++seq, "class", "main");
+            builder.OpenElement(++seq, "h3");
 
             builder.AddContent(++seq, title);
             builder.CloseElement();
-            // builder.OpenElement(seq, "input");
-            // builder.CloseElement();
-            // builder.OpenElement(++seq, "button");
-            // builder.AddAttribute(7, "onclick",
-            // Microsoft.AspNetCore.Components.EventCallback.Factory.Create<Microsoft.AspNetCore.Components.UIMouseEventArgs>(this, onclick));
-            // builder.AddContent(++seq, "Click");
-            // builder.CloseElement();
+
             try
             {
-                foreach (var uiElement in ui.Elements)
+                foreach (var uiElement in _ui.Elements)
                 {
                     RenderElement(builder, seq, uiElement);
                 }
             }
             catch (System.Exception e)
             {
-
-                System.Diagnostics.Debug.WriteLine(e);
+                Print(e);
             }
             builder.CloseElement();
-
-
-
 
             base.BuildRenderTree(builder);
         }
 
-        private static int RenderElement(RenderTreeBuilder builder, int seq, BElement uiElement)
+        private static void Print(object e)
         {
-            builder.OpenElement(seq, uiElement.Tag);
-            if(uiElement.InnerText != null)
+            System.Diagnostics.Debug.WriteLine(e);
+        }
+
+        private int RenderElement(RenderTreeBuilder builder, int seq, BElement uiElement)
+        {
+            builder.OpenElement(++seq, uiElement.Tag);
+        
+            if (uiElement.OnClick != null)
+            {
+                builder.AddAttribute(++seq, "class", "btn btn-primary");
+                builder.AddAttribute(++seq, "onclick",
+                    EventCallback.Factory.Create<UIMouseEventArgs>(this, async (e) =>
+                    {
+                       await EventHandlerHandler(uiElement.OnClick, e);
+                    }));
+            }
+            
+            if (uiElement.InnerText != null)
             {
                 builder.AddContent(++seq, uiElement.InnerText);
             }
-            if(uiElement.InnerElements != null)
+            if (uiElement.InnerElements != null)
             {
                 foreach (var item in uiElement.InnerElements)
                 {
@@ -82,16 +88,21 @@ namespace BlayerUI.Client
             return seq;
         }
 
+        private async Task EventHandlerHandler(string command, object e)
+        {
+            _ui = await client.GetJsonAsync<JsonView>(
+                $"api/SampleData/event?command={command}");
+        }
+
         protected string title = "BuildRenderTree Action";
 
-        public JsonView ui { get; private set; }
+        public JsonView _ui { get; private set; }
 
         public async Task onclick(UIMouseEventArgs e)
         {
-            ui = await client.GetJsonAsync<JsonView>("api/SampleData/View");
+            _ui = await client.GetJsonAsync<JsonView>("api/SampleData/View");
 
             StateHasChanged();
-
         }
     }
 }

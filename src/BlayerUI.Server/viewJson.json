@@ -47,7 +47,8 @@
                              },
                             {
                                 "Tag" : "td",
-                                "InnerText" : "Parker"
+                                "InnerText" : "Parker",
+                                "OnClick" : "ParkerClick"
                              }
                             ]
 
@@ -59,7 +60,9 @@
 
     {
         "Tag" : "button",
-        "InnerText" : "hello Button"
+        "InnerText" : "Click me",
+        "OnClick" : "clickMeClick"
+
     },
     {
         "Tag" : "button",
